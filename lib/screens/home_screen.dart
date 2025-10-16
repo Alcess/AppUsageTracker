@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/app_usage_service.dart';
 import '../models/app_usage.dart';
 import 'app_detail_screen.dart';
+import '../services/usage_access_permission.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +20,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    // On Android, prompt user to grant Usage Access if missing (non-blocking)
+    UsageAccessPermission.ensurePermission();
     _futureUsage = _service.fetchUsage(_selectedRange);
   }
 
@@ -75,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ListView.separated(
                         itemCount: data.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (context, _) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final item = data[index];
                           return ListTile(

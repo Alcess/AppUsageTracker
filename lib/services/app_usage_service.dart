@@ -1,21 +1,40 @@
 import 'dart:async';
+import 'dart:io' show Platform;
+import 'package:flutter/services.dart';
 import '../models/app_usage.dart';
 import '../models/app_usage_detail.dart';
 
 /// A mock service that returns fake app usage data.
 /// Replace with a platform-specific implementation later.
 class AppUsageService {
-  Future<List<AppUsage>> fetchUsage(TimeRange range) async {
-    // Simulate network/compute delay
-    await Future<void>.delayed(const Duration(milliseconds: 400));
+  static const _channel = MethodChannel('app_usage_tracker/usage_access');
 
-    // Generate some mock data that varies by range
+  Future<List<AppUsage>> fetchUsage(TimeRange range) async {
+    if (range == TimeRange.today && Platform.isAndroid) {
+      try {
+        final List<dynamic>? raw = await _channel.invokeMethod<List<dynamic>>('getTodayUsage');
+        final items = (raw ?? const <dynamic>[])
+            .whereType<Map>()
+            .map((m) => AppUsage(
+                  packageName: (m['packageName'] ?? '') as String,
+                  appName: (m['appName'] ?? '') as String,
+                  minutesUsed: ((m['minutesUsed'] ?? 0) as num).toInt(),
+                  launchCount: ((m['launchCount'] ?? 0) as num).toInt(),
+                ))
+            .toList();
+        return items;
+      } on PlatformException catch (_) {
+        // fall back to mock
+      }
+    }
+
+    // Fallback: mock data for non-Android or other ranges
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     final multiplier = switch (range) {
       TimeRange.today => 1,
       TimeRange.week => 5,
       TimeRange.month => 20,
     };
-
     return [
       AppUsage(
         packageName: 'com.social.app',

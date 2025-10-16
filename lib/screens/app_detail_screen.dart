@@ -140,7 +140,7 @@ class _DailyChart extends StatelessWidget {
           children: [
             Text('Daily usage', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
-            ...data.daily.map((d) {
+                        ...data.daily.map((d) {
               final pct = maxMinutes == 0 ? 0.0 : d.minutesUsed / maxMinutes;
               final barColor = Theme.of(context).colorScheme.primary;
               return Padding(
@@ -157,7 +157,7 @@ class _DailyChart extends StatelessWidget {
                           Container(
                             height: 10,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceVariant,
+                                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(6),
                             ),
                           ),
