@@ -3,6 +3,7 @@ import '../services/app_usage_service.dart';
 import '../models/app_usage.dart';
 import 'app_detail_screen.dart';
 import '../services/usage_access_permission.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,6 +39,15 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('App Usage Tracker'),
         actions: [
+          IconButton(
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+          ),
           IconButton(
             tooltip: 'Refresh',
             onPressed: () => _reload(_selectedRange),
