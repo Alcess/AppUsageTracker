@@ -17,7 +17,25 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: DefaultTabController(length: 3, child: Scaffold(
+        appBar: AppBar(
+          title: const Text('App Usage Tracker'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.calendar_today)),
+              Tab(icon: Icon(Icons.home_filled)),
+              Tab(icon: Icon(Icons.notifications)),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            HomeScreen(),
+            Icon(Icons.home_filled),
+            Icon(Icons.notifications),
+          ],
+        ),
+      )),
     );
   }
 }
