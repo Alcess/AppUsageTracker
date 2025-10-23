@@ -28,6 +28,12 @@ class MainActivity : FlutterActivity() {
                         result.success(true)
                     }
                     "getTodayUsage" -> result.success(getTodayUsage())
+                    "getUsage" -> {
+                        val start = (call.argument<Number>("start")?.toLong()) ?: 0L
+                        val end = (call.argument<Number>("end")?.toLong()) ?: System.currentTimeMillis()
+                        val includeSystemApps = call.argument<Boolean>("includeSystemApps") ?: false
+                        result.success(getUsage(start, end, includeSystemApps))
+                    }
                     else -> result.notImplemented()
                 }
             }
@@ -97,24 +103,42 @@ class MainActivity : FlutterActivity() {
     private fun getTodayUsage(): List<Map<String, Any>> {
         val start = startOfDayMillis()
         val end = System.currentTimeMillis()
+        return getUsage(start, end, includeSystemApps = true)
+    }
+
+    private fun getUsage(start: Long, end: Long, includeSystemApps: Boolean): List<Map<String, Any>> {
         val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, start, end) ?: emptyList()
-        val launchCounts = computeLaunchCounts(start, end)
         val pm = packageManager
 
-        val list = ArrayList<Map<String, Any>>()
+        // Aggregate foreground time per package across the window
+        val fgByPkg = HashMap<String, Long>()
+        val stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_BEST, start, end) ?: emptyList()
         for (s in stats) {
             val pkg = s.packageName ?: continue
+            val curr = fgByPkg[pkg] ?: 0L
+            fgByPkg[pkg] = curr + s.totalTimeInForeground
+        }
+
+        // Compute launch counts via events
+        val launchCounts = computeLaunchCounts(start, end)
+
+        val list = ArrayList<Map<String, Any>>()
+        for ((pkg, fgMillis) in fgByPkg) {
             if (pkg == packageName) continue
 
-            val minutes = (s.totalTimeInForeground / 60000L).toInt()
-            if (minutes <= 0) continue
-
             var appName = pkg
+            var isSystem = false
             try {
                 val ai = pm.getApplicationInfo(pkg, 0)
                 appName = pm.getApplicationLabel(ai).toString()
+                isSystem = (ai.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0 ||
+                        (ai.flags and android.content.pm.ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
             } catch (_: Exception) { }
+
+            if (!includeSystemApps && isSystem) continue
+
+            val minutes = (fgMillis / 60000L).toInt()
+            if (minutes <= 0) continue
 
             val launches = launchCounts[pkg] ?: 0
 

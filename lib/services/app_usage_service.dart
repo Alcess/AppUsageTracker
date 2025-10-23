@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/services.dart';
 import '../models/app_usage.dart';
 import '../models/app_usage_detail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// A mock service that returns fake app usage data.
 /// Replace with a platform-specific implementation later.
@@ -10,9 +11,32 @@ class AppUsageService {
   static const _channel = MethodChannel('app_usage_tracker/usage_access');
 
   Future<List<AppUsage>> fetchUsage(TimeRange range) async {
-    if (range == TimeRange.today && Platform.isAndroid) {
+    if (Platform.isAndroid) {
       try {
-        final List<dynamic>? raw = await _channel.invokeMethod<List<dynamic>>('getTodayUsage');
+        final now = DateTime.now();
+        final end = now.millisecondsSinceEpoch;
+        final start = _startForRange(now, range).millisecondsSinceEpoch;
+        final includeSystemApps = await _getIncludeSystemApps();
+
+        // Prefer the generic getUsage call; fallback to getTodayUsage if not implemented and range==today
+        List<dynamic>? raw;
+        try {
+          raw = await _channel.invokeMethod<List<dynamic>>(
+            'getUsage',
+            {
+              'start': start,
+              'end': end,
+              'includeSystemApps': includeSystemApps,
+            },
+          );
+        } on PlatformException catch (_) {
+          if (range == TimeRange.today) {
+            raw = await _channel.invokeMethod<List<dynamic>>('getTodayUsage');
+          } else {
+            rethrow;
+          }
+        }
+
         final items = (raw ?? const <dynamic>[])
             .whereType<Map>()
             .map((m) => AppUsage(
@@ -90,5 +114,23 @@ class AppUsageService {
       totalLaunches: totalLaunches,
       daily: daily,
     );
+  }
+
+  DateTime _startForRange(DateTime now, TimeRange range) {
+    final todayStart = DateTime(now.year, now.month, now.day);
+    return switch (range) {
+      TimeRange.today => todayStart,
+      TimeRange.week => todayStart.subtract(const Duration(days: 6)), // last 7 days incl today
+      TimeRange.month => todayStart.subtract(const Duration(days: 29)), // last 30 days incl today
+    };
+  }
+
+  Future<bool> _getIncludeSystemApps() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('includeSystemApps') ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 }

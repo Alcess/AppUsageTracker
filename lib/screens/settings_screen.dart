@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_usage.dart';
 import '../services/usage_access_permission.dart';
+import 'package:app_usage_tracker/main.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
