@@ -1,12 +1,11 @@
 import 'package:flutter/foundation.dart';
 
-/// Represents usage of a single app within a time range.
 @immutable
 class AppLimit {
   final List<String> packageNames;
   final String notificationName;
-  final int minutesTracked; // total foreground minutes
-  final int minuteLimit; // default limit for notifications
+  final int minutesTracked; 
+  final int minuteLimit;
   final TimeRange limitRefresh;
 
   const AppLimit({
@@ -18,6 +17,5 @@ class AppLimit {
   });
 }
 
-/// Time ranges supported by the UI.
 enum TimeRange { today, week, month }
 enum LimitAction { notify, block }
