@@ -1,7 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/home_screen.dart';
+import 'screens/command_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/parent_dashboard_screen.dart';
+import 'screens/child_usage_view_screen.dart';
+import 'services/fcm_service.dart';
+import 'services/role_service.dart';
+import 'services/child_usage_tracking_service.dart';
+import 'services/theme_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize theme service
+  await ThemeService().initializeTheme();
+
+  // Initialize Firebase only on mobile platforms (requires config files)
+  if (!kIsWeb) {
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // Initialize FCM after Firebase
+      await FCMService.initialize();
+
+      // Start listening for commands if in child mode
+      final role = await RoleService.getRole();
+      if (role == AppRole.child) {
+        await FCMService.startListeningForCommands();
+        // Start child usage tracking and syncing
+        await ChildUsageTrackingService.startChildModeTracking();
+      }
+    } catch (e) {
+      // Handle Firebase/FCM initialization errors gracefully
+      debugPrint('Firebase/FCM initialization failed: $e');
+    }
+  } else {
+    debugPrint('Running in web mode - Firebase features disabled');
+  }
+
   runApp(const MyApp());
 }
 
@@ -10,32 +51,67 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'App Usage Tracker',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
-      ),
-      home: DefaultTabController(length: 3, child: Scaffold(
-        appBar: AppBar(
-          title: const Text('App Usage Tracker'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.calendar_today)),
-              Tab(icon: Icon(Icons.home_filled)),
-              Tab(icon: Icon(Icons.notifications)),
-            ],
+    return AnimatedBuilder(
+      animation: ThemeService(),
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'App Usage Tracker',
+          theme: ThemeService().lightTheme,
+          darkTheme: ThemeService().darkTheme,
+          themeMode: ThemeService().isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          routes: {'/child-usage-view': (context) => const ChildUsageViewScreen()},
+          home: DefaultTabController(
+            length: 5,
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text('App Usage Tracker'),
+                actions: [
+                  FutureBuilder<AppRole>(
+                    future: RoleService.getRole(),
+                    builder: (context, snapshot) {
+                      final isParent = snapshot.data == AppRole.parent;
+                      return isParent
+                          ? IconButton(
+                              icon: const Icon(Icons.family_restroom),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ParentDashboardScreen(),
+                                  ),
+                                );
+                              },
+                              tooltip: 'Parent Dashboard',
+                            )
+                          : const SizedBox.shrink();
+                    },
+                  ),
+                ],
+                bottom: const TabBar(
+                  tabs: [
+                    Tab(icon: Icon(Icons.calendar_today)),
+                    Tab(icon: Icon(Icons.home_filled)),
+                    Tab(icon: Icon(Icons.notifications)),
+                    Tab(icon: Icon(Icons.control_camera)),
+                    Tab(icon: Icon(Icons.settings)),
+                  ],
+                ),
+              ),
+              body: const TabBarView(
+                children: [
+                  HomeScreen(),
+                  Icon(Icons.home_filled),
+                  Icon(Icons.notifications),
+                  CommandScreen(),
+                  SettingsScreen(),
+                ],
+              ),
+            ),
           ),
-        ),
-        body: const TabBarView(
-          children: [
-            HomeScreen(),
-            Icon(Icons.home_filled),
-            Icon(Icons.notifications),
-          ],
-        ),
-      )),
+        );
+      },
     );
   }
 }
