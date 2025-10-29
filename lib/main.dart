@@ -1,9 +1,10 @@
+import 'package:app_usage_tracker/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
-import 'screens/home_screen.dart';
+import 'screens/stats_screen.dart';
 import 'screens/command_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/parent_dashboard_screen.dart';
@@ -113,8 +114,8 @@ class MyApp extends StatelessWidget {
               ),
               body: const TabBarView(
                 children: [
+                  StatsScreen(),
                   HomeScreen(),
-                  Icon(Icons.home_filled),
                   Icon(Icons.notifications),
                   CommandScreen(),
                   SettingsScreen(),

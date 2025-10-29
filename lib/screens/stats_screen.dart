@@ -1,0 +1,166 @@
+import 'package:flutter/material.dart';
+import '../services/app_usage_service.dart';
+import '../utils/time_format.dart';
+import '../models/app_usage.dart';
+import 'app_detail_screen.dart';
+import '../services/usage_access_permission.dart';
+
+class StatsScreen extends StatefulWidget {
+  const StatsScreen({super.key});
+
+  @override
+  State<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends State<StatsScreen> {
+  final AppUsageService _service = AppUsageService();
+
+  late Future<List<AppUsage>> _futureUsage;
+  TimeRange _selectedRange = TimeRange.today;
+
+  @override
+  void initState() {
+    super.initState();
+    // On Android, prompt user to grant Usage Access if missing (non-blocking)
+    UsageAccessPermission.ensurePermission();
+    _futureUsage = _service.fetchUsage(_selectedRange);
+  }
+
+  void _reload(TimeRange range) {
+    setState(() {
+      _selectedRange = range;
+      _futureUsage = _service.fetchUsage(range);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          _RangeSelector(selected: _selectedRange, onChanged: _reload),
+          Expanded(
+            child: FutureBuilder<List<AppUsage>>(
+              future: _futureUsage,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text('Error: ${snapshot.error}'),
+                    ),
+                  );
+                }
+                final data = snapshot.data ?? const <AppUsage>[];
+                if (data.isEmpty) {
+                  return const Center(child: Text('No usage data'));
+                }
+                final totalMinutes = data.fold<int>(
+                  0,
+                  (sum, e) => sum + e.minutesUsed,
+                );
+                return Column(
+                  children: [
+                    _SummaryCard(totalMinutes: totalMinutes),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: data.length,
+                        separatorBuilder: (context, _) =>
+                            const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final item = data[index];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
+                              child: Text(
+                                item.appName.substring(0, 1).toUpperCase(),
+                              ),
+                            ),
+                            title: Text(item.appName),
+                            subtitle: Text(
+                              '${item.minutesUsed} min • ${item.launchCount} launches',
+                            ),
+                            trailing: Text(formatTime(item.minutesUsed)),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => AppDetailScreen(
+                                    packageName: item.packageName,
+                                    appName: item.appName,
+                                    initialRange: _selectedRange,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _reload(_selectedRange),
+        icon: const Icon(Icons.sync),
+        label: const Text('Refresh'),
+      ),
+    );
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.totalMinutes});
+  final int totalMinutes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.all(12),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(Icons.timer, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 12),
+            Text(
+              'Total: ${formatTime(totalMinutes)}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RangeSelector extends StatelessWidget {
+  const _RangeSelector({required this.selected, required this.onChanged});
+  final TimeRange selected;
+  final ValueChanged<TimeRange> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: SegmentedButton<TimeRange>(
+        segments: const [
+          ButtonSegment(value: TimeRange.today, label: Text('Day')),
+          ButtonSegment(value: TimeRange.week, label: Text('Week')),
+          ButtonSegment(value: TimeRange.month, label: Text('Month')),
+        ],
+        selected: {selected},
+        onSelectionChanged: (s) => onChanged(s.first),
+      ),
+    );
+  }
+}
