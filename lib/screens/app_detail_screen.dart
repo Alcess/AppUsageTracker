@@ -1,3 +1,4 @@
+import 'package:app_usage_tracker/utils/time_format.dart';
 import 'package:flutter/material.dart';
 import '../models/app_usage_detail.dart';
 import '../models/app_usage.dart';
@@ -102,7 +103,7 @@ class _Summary extends StatelessWidget {
             Row(children: [
               const Icon(Icons.timer),
               const SizedBox(width: 8),
-              Text(_fmt(data.totalMinutes), style: Theme.of(context).textTheme.titleMedium),
+              Text(formatTime(data.totalMinutes), style: Theme.of(context).textTheme.titleMedium),
             ]),
             Row(children: [
               const Icon(Icons.play_arrow),
@@ -113,13 +114,6 @@ class _Summary extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _fmt(int minutes) {
-    final h = minutes ~/ 60;
-    final m = minutes % 60;
-    if (h == 0) return '${m}m';
-    return '${h}h ${m}m';
   }
 }
 
@@ -175,7 +169,7 @@ class _DailyChart extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    SizedBox(width: 40, child: Text('${d.minutesUsed}m', textAlign: TextAlign.end)),
+                    SizedBox(width: 40, child: Text(formatTime(d.minutesUsed), textAlign: TextAlign.end)),
                   ],
                 ),
               );

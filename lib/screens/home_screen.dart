@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/app_usage_service.dart';
+import '../utils/time_format.dart';
 import '../models/app_usage.dart';
 import 'app_detail_screen.dart';
 import '../services/usage_access_permission.dart';
@@ -43,9 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: 'Settings',
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
             },
           ),
           IconButton(
@@ -57,10 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          _RangeSelector(
-            selected: _selectedRange,
-            onChanged: _reload,
-          ),
+          _RangeSelector(selected: _selectedRange, onChanged: _reload),
           Expanded(
             child: FutureBuilder<List<AppUsage>>(
               future: _futureUsage,
@@ -80,7 +78,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (data.isEmpty) {
                   return const Center(child: Text('No usage data'));
                 }
-                final totalMinutes = data.fold<int>(0, (sum, e) => sum + e.minutesUsed);
+                final totalMinutes = data.fold<int>(
+                  0,
+                  (sum, e) => sum + e.minutesUsed,
+                );
                 return Column(
                   children: [
                     _SummaryCard(totalMinutes: totalMinutes),
@@ -88,17 +89,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ListView.separated(
                         itemCount: data.length,
-                        separatorBuilder: (context, _) => const Divider(height: 1),
+                        separatorBuilder: (context, _) =>
+                            const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final item = data[index];
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                              child: Text(item.appName.substring(0, 1).toUpperCase()),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
+                              child: Text(
+                                item.appName.substring(0, 1).toUpperCase(),
+                              ),
                             ),
                             title: Text(item.appName),
-                            subtitle: Text('${item.minutesUsed} min • ${item.launchCount} launches'),
-                            trailing: Text(_formatDuration(item.minutesUsed)),
+                            subtitle: Text(
+                              '${item.minutesUsed} min • ${item.launchCount} launches',
+                            ),
+                            trailing: Text(formatTime(item.minutesUsed)),
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -128,13 +136,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  String _formatDuration(int minutes) {
-    final hours = minutes ~/ 60;
-    final rem = minutes % 60;
-    if (hours == 0) return '${rem}m';
-    return '${hours}h ${rem}m';
-  }
 }
 
 class _SummaryCard extends StatelessWidget {
@@ -152,20 +153,13 @@ class _SummaryCard extends StatelessWidget {
             Icon(Icons.timer, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 12),
             Text(
-              'Total: ${_format(totalMinutes)}',
+              'Total: ${formatTime(totalMinutes)}',
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ],
         ),
       ),
     );
-  }
-
-  String _format(int minutes) {
-    final h = minutes ~/ 60;
-    final m = minutes % 60;
-    if (h == 0) return '${m}m';
-    return '${h}h ${m}m';
   }
 }
 
