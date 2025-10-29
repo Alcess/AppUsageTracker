@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/command_screen.dart';
@@ -14,6 +15,13 @@ import 'services/theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint('Error loading .env file: $e');
+  }
 
   // Initialize theme service
   await ThemeService().initializeTheme();
@@ -59,8 +67,12 @@ class MyApp extends StatelessWidget {
           title: 'App Usage Tracker',
           theme: ThemeService().lightTheme,
           darkTheme: ThemeService().darkTheme,
-          themeMode: ThemeService().isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          routes: {'/child-usage-view': (context) => const ChildUsageViewScreen()},
+          themeMode: ThemeService().isDarkMode
+              ? ThemeMode.dark
+              : ThemeMode.light,
+          routes: {
+            '/child-usage-view': (context) => const ChildUsageViewScreen(),
+          },
           home: DefaultTabController(
             length: 5,
             child: Scaffold(

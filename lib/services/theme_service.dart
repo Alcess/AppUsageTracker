@@ -34,23 +34,23 @@ class ThemeService extends ChangeNotifier {
 
   /// Get light theme
   ThemeData get lightTheme => ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        brightness: Brightness.light,
-      );
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.indigo,
+      brightness: Brightness.light,
+    ),
+    useMaterial3: true,
+    brightness: Brightness.light,
+  );
 
   /// Get dark theme
   ThemeData get darkTheme => ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        brightness: Brightness.dark,
-      );
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.indigo,
+      brightness: Brightness.dark,
+    ),
+    useMaterial3: true,
+    brightness: Brightness.dark,
+  );
 
   /// Get current theme based on dark mode setting
   ThemeData get currentTheme => _isDarkMode ? darkTheme : lightTheme;

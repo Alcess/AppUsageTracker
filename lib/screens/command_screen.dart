@@ -91,7 +91,10 @@ class _CommandScreenState extends State<CommandScreen> {
                         SizedBox(width: 8),
                         Text(
                           'Device Control',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -103,19 +106,25 @@ class _CommandScreenState extends State<CommandScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _toggleDeviceLock,
                         icon: Icon(
-                          _isDeviceLocked ? Icons.lock_open : Icons.lock, 
+                          _isDeviceLocked ? Icons.lock_open : Icons.lock,
                           color: Colors.white,
                         ),
-                        label: Text(_isDeviceLocked ? 'Unlock Device' : 'Lock Device'),
+                        label: Text(
+                          _isDeviceLocked ? 'Unlock Device' : 'Lock Device',
+                        ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isDeviceLocked ? Colors.green : Colors.red,
+                          backgroundColor: _isDeviceLocked
+                              ? Colors.green
+                              : Colors.red,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),
-                    
+
                     if (_isDeviceLocked) ...[
                       const SizedBox(height: 12),
                       Container(
@@ -147,10 +156,7 @@ class _CommandScreenState extends State<CommandScreen> {
                     const SizedBox(height: 16),
                     const Text(
                       'When locked, the child device will show a black screen with the message "This device is locked by your parent" over all apps and activities.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -189,7 +195,9 @@ class _CommandScreenState extends State<CommandScreen> {
         }
       }
     } catch (e) {
-      _showMessage('Failed to ${_isDeviceLocked ? 'unlock' : 'lock'} device: $e');
+      _showMessage(
+        'Failed to ${_isDeviceLocked ? 'unlock' : 'lock'} device: $e',
+      );
     }
   }
 

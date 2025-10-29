@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -49,13 +50,56 @@ class DefaultFirebaseOptions {
     storageBucket: 'demo-project.appspot.com',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBk8g-cD6YWrMJxypgVn82miUnOIZ7oGOo',
-    appId: '1:291956048613:android:4b394fd1a1c7aa18dc4a0c',
-    messagingSenderId: '291956048613',
-    projectId: 'for-appdev',
-    storageBucket: 'for-appdev.firebasestorage.app',
-  );
+  static FirebaseOptions get android {
+    final apiKey = dotenv.env['FIREBASE_API_KEY'];
+    final projectId = dotenv.env['FIREBASE_PROJECT_ID'];
+    final appId = dotenv.env['FIREBASE_APP_ID'];
+    final messagingSenderId = dotenv.env['FIREBASE_MESSAGING_SENDER_ID'];
+    final storageBucket = dotenv.env['FIREBASE_STORAGE_BUCKET'];
+
+    if (apiKey == null || apiKey.isEmpty) {
+      throw Exception(
+        'FIREBASE_API_KEY not found in environment variables. '
+        'Please ensure your .env file is properly configured.',
+      );
+    }
+
+    if (projectId == null || projectId.isEmpty) {
+      throw Exception(
+        'FIREBASE_PROJECT_ID not found in environment variables. '
+        'Please ensure your .env file is properly configured.',
+      );
+    }
+
+    if (appId == null || appId.isEmpty) {
+      throw Exception(
+        'FIREBASE_APP_ID not found in environment variables. '
+        'Please ensure your .env file is properly configured.',
+      );
+    }
+
+    if (messagingSenderId == null || messagingSenderId.isEmpty) {
+      throw Exception(
+        'FIREBASE_MESSAGING_SENDER_ID not found in environment variables. '
+        'Please ensure your .env file is properly configured.',
+      );
+    }
+
+    if (storageBucket == null || storageBucket.isEmpty) {
+      throw Exception(
+        'FIREBASE_STORAGE_BUCKET not found in environment variables. '
+        'Please ensure your .env file is properly configured.',
+      );
+    }
+
+    return FirebaseOptions(
+      apiKey: apiKey,
+      appId: appId,
+      messagingSenderId: messagingSenderId,
+      projectId: projectId,
+      storageBucket: storageBucket,
+    );
+  }
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'demo-key',

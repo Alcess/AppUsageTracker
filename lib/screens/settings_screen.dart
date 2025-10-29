@@ -249,9 +249,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 SwitchListTile(
                   title: const Text('Dark mode'),
-                  subtitle: const Text(
-                    'Use dark theme (changes immediately)',
-                  ),
+                  subtitle: const Text('Use dark theme (changes immediately)'),
                   value: _darkMode,
                   onChanged: (v) async {
                     setState(() => _darkMode = v);

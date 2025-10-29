@@ -16,7 +16,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   bool _isLinked = false;
   String? _linkCode;
   bool _loading = true;
-  
+
   // Track device lock state
   bool _isDeviceLocked = false;
 
@@ -41,7 +41,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     final linkCode = await FamilyLinkService.getLinkCode();
 
     setState(() {
-      _isParent = role == AppRole.parent;  // Fixed: using enum instead of string
+      _isParent = role == AppRole.parent; // Fixed: using enum instead of string
       _isLinked = isLinked;
       _linkCode = linkCode;
       _loading = false;
@@ -51,9 +51,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (!_isParent) {
@@ -176,7 +174,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               child: ElevatedButton.icon(
                 onPressed: _toggleDeviceLock,
                 icon: Icon(
-                  _isDeviceLocked ? Icons.lock_open : Icons.lock, 
+                  _isDeviceLocked ? Icons.lock_open : Icons.lock,
                   color: Colors.white,
                 ),
                 label: Text(_isDeviceLocked ? 'Unlock Device' : 'Lock Device'),
@@ -184,11 +182,13 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   backgroundColor: _isDeviceLocked ? Colors.green : Colors.red,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),
-            
+
             if (_isDeviceLocked) ...[
               const SizedBox(height: 12),
               Container(
@@ -263,7 +263,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
                 final latestDoc = snapshot.data!.docs.first;
                 final data = latestDoc.data() as Map<String, dynamic>;
-                
+
                 final syncedAt = data['syncedAt'] as String?;
                 final formattedTime = _formatSyncTime(syncedAt);
 
@@ -272,10 +272,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   children: [
                     Text(
                       'Last synced: $formattedTime',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
                     ),
                     const SizedBox(height: 12),
                     if (data['events'] != null) ...[
@@ -287,9 +284,12 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      ...((data['events'] as List).take(5).map((event) => 
-                        _buildEventItem(event as Map<String, dynamic>)
-                      )),
+                      ...((data['events'] as List)
+                          .take(5)
+                          .map(
+                            (event) =>
+                                _buildEventItem(event as Map<String, dynamic>),
+                          )),
                     ] else ...[
                       const Text('No recent activity data.'),
                     ],
@@ -308,11 +308,11 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     final appName = _getAppName(packageName);
     final eventType = event['eventType'] as int? ?? 0;
     final timestamp = event['timestamp'] as int? ?? 0;
-    
+
     String eventDescription;
     IconData eventIcon;
     Color eventColor;
-    
+
     switch (eventType) {
       case 1: // MOVE_TO_FOREGROUND
         eventDescription = 'Opened';
@@ -355,10 +355,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                 ),
                 Text(
                   '$eventDescription • ${_formatTimestamp(timestamp)}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
               ],
             ),
@@ -385,7 +382,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'com.viber.voip': 'Viber',
       'com.skype.raider': 'Skype',
       'com.zhiliaoapp.musically': 'TikTok',
-      
+
       // Video & Entertainment
       'com.google.android.youtube': 'YouTube',
       'com.netflix.mediaclient': 'Netflix',
@@ -399,7 +396,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'deezer.android.app': 'Deezer',
       'com.soundcloud.android': 'SoundCloud',
       'com.twitch.android.app': 'Twitch',
-      
+
       // Gaming
       'com.roblox.client': 'Roblox',
       'com.ea.game.pvzheroes_row': 'Plants vs Zombies',
@@ -413,7 +410,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'com.miHoYo.GenshinImpact': 'Genshin Impact',
       'com.rovio.angrybirdsdream': 'Angry Birds',
       'com.pokemongo': 'Pokemon GO',
-      
+
       // Shopping & Food
       'com.amazon.mShop.android.shopping': 'Amazon',
       'com.ebay.mobile': 'eBay',
@@ -425,8 +422,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'com.dd.doordash': 'DoorDash',
       'com.mcdonalds.app': 'McDonalds',
       'com.starbucks.mobilecard': 'Starbucks',
-      
-      // Education & Productivity  
+
+      // Education & Productivity
       'com.duolingo': 'Duolingo',
       'com.khanacademy.android': 'Khan Academy',
       'com.google.android.apps.classroom': 'Google Classroom',
@@ -441,7 +438,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'com.google.android.apps.slides': 'Google Slides',
       'com.evernote': 'Evernote',
       'com.notion.id': 'Notion',
-      
+
       // Google Apps
       'com.google.android.gm': 'Gmail',
       'com.google.android.apps.maps': 'Google Maps',
@@ -452,11 +449,11 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'com.google.android.apps.translate': 'Google Translate',
       'com.google.android.apps.chromecast.app': 'Google Home',
       'com.google.android.play.games': 'Google Play Games',
-      
+
       // Apple/iOS equivalent Android apps
       'com.apple.android.facetime': 'FaceTime',
       'com.apple.android.imessage': 'iMessage',
-      
+
       // Browser & Tools
       'com.android.chrome': 'Chrome',
       'org.mozilla.firefox': 'Firefox',
@@ -464,7 +461,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'com.opera.browser': 'Opera',
       'com.brave.browser': 'Brave',
       'com.duckduckgo.mobile.android': 'DuckDuckGo',
-      
+
       // Finance & Banking
       'com.paypal.android.p2pmobile': 'PayPal',
       'com.venmo': 'Venmo',
@@ -473,7 +470,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'com.chase.sig.android': 'Chase Bank',
       'com.bankofamerica.mobile': 'Bank of America',
       'com.wellsfargo.mobile.android': 'Wells Fargo',
-      
+
       // News & Reading
       'flipboard.app': 'Flipboard',
       'com.cnn.mobile.android.phone': 'CNN',
@@ -482,7 +479,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'com.washingtonpost.rainbow': 'Washington Post',
       'bbc.mobile.news.ww': 'BBC News',
       'com.medium.reader': 'Medium',
-      
+
       // Health & Fitness
       'com.fitbit.FitbitMobile': 'Fitbit',
       'com.nike.plusone': 'Nike Training',
@@ -491,7 +488,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'com.calm.android': 'Calm',
       'com.strava': 'Strava',
       'com.peloton.callisto': 'Peloton',
-      
+
       // Transportation
       'com.lyft.android': 'Lyft',
       'com.waze': 'Waze',
@@ -499,7 +496,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       'com.booking': 'Booking.com',
       'com.expedia.bookings': 'Expedia',
       'com.kayak.android': 'Kayak',
-      
+
       // Android System Apps
       'com.android.settings': 'Settings',
       'com.android.camera2': 'Camera',
@@ -522,7 +519,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       final dateTime = DateTime.parse(isoString);
       final now = DateTime.now();
       final difference = now.difference(dateTime);
-      
+
       if (difference.inMinutes < 1) {
         return 'Just now';
       } else if (difference.inMinutes < 60) {
@@ -573,7 +570,9 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         }
       }
     } catch (e) {
-      _showMessage('Failed to ${_isDeviceLocked ? 'unlock' : 'lock'} device: $e');
+      _showMessage(
+        'Failed to ${_isDeviceLocked ? 'unlock' : 'lock'} device: $e',
+      );
     }
   }
 

@@ -132,7 +132,9 @@ class FCMService {
         // Handle emergency unlock or unlock all command - force hide all overlays
         await SimpleOverlayService.hideSystemOverlay();
         OverlayService.hideOverlay();
-        debugPrint('Emergency/unlock all command executed - all overlays force hidden');
+        debugPrint(
+          'Emergency/unlock all command executed - all overlays force hidden',
+        );
         break;
       case 'time_limit':
         // Handle time limit command
@@ -145,13 +147,15 @@ class FCMService {
   /// Show device-wide lock overlay
   static Future<void> showDeviceLockOverlay() async {
     // Use the system overlay that works over other apps
-    final success = await SimpleOverlayService.showSystemOverlay('Device Locked');
-    
+    final success = await SimpleOverlayService.showSystemOverlay(
+      'Device Locked',
+    );
+
     if (!success) {
       // Fallback to notification if system overlay fails
       await SimpleScreenLockService.showBlockingNotification('Device Locked');
     }
-    
+
     debugPrint('Device lock command executed - System overlay: $success');
   }
 
@@ -159,12 +163,12 @@ class FCMService {
   static Future<void> showLockOverlay(String appPackage, String appName) async {
     // Use the system overlay that works over other apps
     final success = await SimpleOverlayService.showSystemOverlay(appName);
-    
+
     if (!success) {
       // Fallback to notification if system overlay fails
       await SimpleScreenLockService.showBlockingNotification(appName);
     }
-    
+
     debugPrint('Lock command executed for $appName - System overlay: $success');
   }
 
