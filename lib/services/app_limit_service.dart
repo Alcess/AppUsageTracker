@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models/app_limit.dart';
 import '../models/app_usage.dart';
 import 'app_usage_service.dart';
@@ -11,10 +13,33 @@ class AppLimitService {
   factory AppLimitService() => _instance;
   AppLimitService._internal();
 
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   final AppUsageService _usageService = AppUsageService();
+
+  bool _isInitialized = false;
+
+  /// Initialize the service and notifications
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    // Initialize local notifications
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initSettings = InitializationSettings(
+      android: androidSettings,
+    );
+
+    await _notifications.initialize(initSettings);
+    _isInitialized = true;
+
+    debugPrint('AppLimitService initialized with notifications');
+  }
 
   /// Get all configured app limits
   Future<List<AppLimit>> getAppLimits() async {
+    await initialize();
     final prefs = await SharedPreferences.getInstance();
     final limitsJson = prefs.getStringList(_prefsKey) ?? [];
 
@@ -76,6 +101,69 @@ class AppLimitService {
     return statuses.where((status) => status.isOverLimit).toList();
   }
 
+  /// Check for limit violations and send notifications
+  Future<void> checkLimitsAndNotify() async {
+    final statuses = await getAppLimitStatuses();
+    final now = DateTime.now();
+
+    for (final status in statuses) {
+      if (status.isOverLimit) {
+        final limit = status.limit;
+
+        // Only notify once per day to avoid spam
+        final shouldNotify =
+            limit.lastNotified == null || !_isSameDay(limit.lastNotified!, now);
+
+        if (shouldNotify) {
+          await _sendLimitNotification(status);
+
+          // Update last notified time
+          final updatedLimit = limit.copyWith(lastNotified: now);
+          await updateAppLimit(updatedLimit);
+        }
+      }
+    }
+  }
+
+  /// Send a notification for limit violation
+  Future<void> _sendLimitNotification(AppLimitStatus status) async {
+    await initialize();
+
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'app_limits',
+          'App Usage Limits',
+          channelDescription:
+              'Notifications when app usage limits are exceeded',
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        );
+
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    final title = '⚠️ Usage Limit Exceeded';
+    final body =
+        '${status.limit.appName} limit (${formatMinutes(status.limit.limitMinutes)}) exceeded!\n'
+        'You\'ve used ${formatMinutes(status.currentUsageMinutes)} today.';
+
+    await _notifications.show(
+      status.limit.packageName.hashCode,
+      title,
+      body,
+      notificationDetails,
+    );
+
+    debugPrint('Sent notification for ${status.limit.appName} limit exceeded');
+  }
+
+  /// Manually trigger notification check (for testing)
+  Future<void> triggerNotificationCheck() async {
+    await checkLimitsAndNotify();
+  }
+
   /// Save app limits to shared preferences
   Future<void> _saveAppLimits(List<AppLimit> limits) async {
     final prefs = await SharedPreferences.getInstance();
@@ -83,6 +171,13 @@ class AppLimitService {
         .map((limit) => jsonEncode(limit.toJson()))
         .toList();
     await prefs.setStringList(_prefsKey, limitsJson);
+  }
+
+  /// Check if two dates are on the same day
+  bool _isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 
   /// Get app limit for a specific package (if exists)

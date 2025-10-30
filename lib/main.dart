@@ -14,6 +14,7 @@ import 'services/fcm_service.dart';
 import 'services/role_service.dart';
 import 'services/child_usage_tracking_service.dart';
 import 'services/theme_service.dart';
+import 'services/app_limit_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +52,14 @@ void main() async {
     }
   } else {
     debugPrint('Running in web mode - Firebase features disabled');
+  }
+
+  // Initialize app limit service for notifications
+  try {
+    await AppLimitService().initialize();
+    debugPrint('AppLimitService initialized');
+  } catch (e) {
+    debugPrint('AppLimitService initialization failed: $e');
   }
 
   runApp(const MyApp());

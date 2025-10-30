@@ -25,6 +25,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Future<void> _loadLimitStatuses() async {
     try {
       final statuses = await _limitService.getAppLimitStatuses();
+
+      // Also check for notifications when loading
+      await _limitService.checkLimitsAndNotify();
+
       if (mounted) {
         setState(() {
           _limitStatuses = statuses;
@@ -69,6 +73,19 @@ class _NotificationScreenState extends State<NotificationScreen> {
         title: const Text('Notifications'),
         automaticallyImplyLeading: false,
         actions: [
+          // Test Notifications Button
+          Tooltip(
+            message: 'Check Limits Now',
+            child: IconButton(
+              onPressed: () async {
+                await _limitService.triggerNotificationCheck();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Checked for limit violations')),
+                );
+              },
+              icon: const Icon(Icons.notification_add, size: 18),
+            ),
+          ),
           // View Limits Button
           Tooltip(
             message: 'View App Limits',
