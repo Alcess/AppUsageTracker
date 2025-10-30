@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/family_link_service.dart';
 import '../services/role_service.dart';
 import '../services/command_service.dart';
+import '../utils/app_name_mapper.dart';
 
 class ParentDashboardScreen extends StatefulWidget {
   const ParentDashboardScreen({super.key});
@@ -305,7 +306,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   Widget _buildEventItem(Map<String, dynamic> event) {
     final packageName = event['packageName'] as String? ?? '';
-    final appName = _getAppName(packageName);
+    final appName = AppNameMapper.getAppNameSync(packageName);
     final eventType = event['eventType'] as int? ?? 0;
     final timestamp = event['timestamp'] as int? ?? 0;
 
@@ -363,154 +364,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         ],
       ),
     );
-  }
-
-  String _getAppName(String packageName) {
-    const packageToNameMap = {
-      // Social Media
-      'com.tiktok.android': 'TikTok',
-      'com.instagram.android': 'Instagram',
-      'com.snapchat.android': 'Snapchat',
-      'com.facebook.katana': 'Facebook',
-      'com.twitter.android': 'Twitter',
-      'com.linkedin.android': 'LinkedIn',
-      'com.pinterest': 'Pinterest',
-      'com.reddit.frontpage': 'Reddit',
-      'com.discord': 'Discord',
-      'com.telegram.messenger': 'Telegram',
-      'com.whatsapp': 'WhatsApp',
-      'com.viber.voip': 'Viber',
-      'com.skype.raider': 'Skype',
-      'com.zhiliaoapp.musically': 'TikTok',
-
-      // Video & Entertainment
-      'com.google.android.youtube': 'YouTube',
-      'com.netflix.mediaclient': 'Netflix',
-      'com.amazon.avod.thirdpartyclient': 'Prime Video',
-      'com.disney.disneyplus': 'Disney+',
-      'com.hulu.plus': 'Hulu',
-      'com.spotify.music': 'Spotify',
-      'com.amazon.mp3': 'Amazon Music',
-      'com.apple.android.music': 'Apple Music',
-      'com.pandora.android': 'Pandora',
-      'deezer.android.app': 'Deezer',
-      'com.soundcloud.android': 'SoundCloud',
-      'com.twitch.android.app': 'Twitch',
-
-      // Gaming
-      'com.roblox.client': 'Roblox',
-      'com.ea.game.pvzheroes_row': 'Plants vs Zombies',
-      'com.supercell.clashofclans': 'Clash of Clans',
-      'com.supercell.clashroyale': 'Clash Royale',
-      'com.king.candycrushsaga': 'Candy Crush',
-      'com.mojang.minecraftpe': 'Minecraft',
-      'com.epicgames.fortnite': 'Fortnite',
-      'com.pubg.imobile': 'PUBG Mobile',
-      'com.garena.game.codm': 'Call of Duty Mobile',
-      'com.miHoYo.GenshinImpact': 'Genshin Impact',
-      'com.rovio.angrybirdsdream': 'Angry Birds',
-      'com.pokemongo': 'Pokemon GO',
-
-      // Shopping & Food
-      'com.amazon.mShop.android.shopping': 'Amazon',
-      'com.ebay.mobile': 'eBay',
-      'com.alibaba.aliexpresshd': 'AliExpress',
-      'com.wish.buying': 'Wish',
-      'com.ubercab': 'Uber',
-      'com.ubercab.eats': 'Uber Eats',
-      'com.grubhub.android': 'Grubhub',
-      'com.dd.doordash': 'DoorDash',
-      'com.mcdonalds.app': 'McDonalds',
-      'com.starbucks.mobilecard': 'Starbucks',
-
-      // Education & Productivity
-      'com.duolingo': 'Duolingo',
-      'com.khanacademy.android': 'Khan Academy',
-      'com.google.android.apps.classroom': 'Google Classroom',
-      'us.zoom.videomeetings': 'Zoom',
-      'com.microsoft.teams': 'Microsoft Teams',
-      'com.google.android.apps.meetings': 'Google Meet',
-      'com.microsoft.office.word': 'Microsoft Word',
-      'com.microsoft.office.powerpoint': 'PowerPoint',
-      'com.microsoft.office.excel': 'Excel',
-      'com.google.android.apps.docs': 'Google Docs',
-      'com.google.android.apps.sheets': 'Google Sheets',
-      'com.google.android.apps.slides': 'Google Slides',
-      'com.evernote': 'Evernote',
-      'com.notion.id': 'Notion',
-
-      // Google Apps
-      'com.google.android.gm': 'Gmail',
-      'com.google.android.apps.maps': 'Google Maps',
-      'com.google.android.googlequicksearchbox': 'Google Search',
-      'com.google.android.apps.photos': 'Google Photos',
-      'com.google.android.apps.drive': 'Google Drive',
-      'com.google.android.calendar': 'Google Calendar',
-      'com.google.android.apps.translate': 'Google Translate',
-      'com.google.android.apps.chromecast.app': 'Google Home',
-      'com.google.android.play.games': 'Google Play Games',
-
-      // Apple/iOS equivalent Android apps
-      'com.apple.android.facetime': 'FaceTime',
-      'com.apple.android.imessage': 'iMessage',
-
-      // Browser & Tools
-      'com.android.chrome': 'Chrome',
-      'org.mozilla.firefox': 'Firefox',
-      'com.microsoft.emmx': 'Microsoft Edge',
-      'com.opera.browser': 'Opera',
-      'com.brave.browser': 'Brave',
-      'com.duckduckgo.mobile.android': 'DuckDuckGo',
-
-      // Finance & Banking
-      'com.paypal.android.p2pmobile': 'PayPal',
-      'com.venmo': 'Venmo',
-      'com.coinbase.android': 'Coinbase',
-      'com.squareup.cash': 'Cash App',
-      'com.chase.sig.android': 'Chase Bank',
-      'com.bankofamerica.mobile': 'Bank of America',
-      'com.wellsfargo.mobile.android': 'Wells Fargo',
-
-      // News & Reading
-      'flipboard.app': 'Flipboard',
-      'com.cnn.mobile.android.phone': 'CNN',
-      'com.foxnews.android': 'Fox News',
-      'com.nytimes.android': 'New York Times',
-      'com.washingtonpost.rainbow': 'Washington Post',
-      'bbc.mobile.news.ww': 'BBC News',
-      'com.medium.reader': 'Medium',
-
-      // Health & Fitness
-      'com.fitbit.FitbitMobile': 'Fitbit',
-      'com.nike.plusone': 'Nike Training',
-      'com.myfitnesspal.android': 'MyFitnessPal',
-      'com.headspace.android': 'Headspace',
-      'com.calm.android': 'Calm',
-      'com.strava': 'Strava',
-      'com.peloton.callisto': 'Peloton',
-
-      // Transportation
-      'com.lyft.android': 'Lyft',
-      'com.waze': 'Waze',
-      'com.airbnb.android': 'Airbnb',
-      'com.booking': 'Booking.com',
-      'com.expedia.bookings': 'Expedia',
-      'com.kayak.android': 'Kayak',
-
-      // Android System Apps
-      'com.android.settings': 'Settings',
-      'com.android.camera2': 'Camera',
-      'com.android.gallery3d': 'Gallery',
-      'com.android.mms': 'Messages',
-      'com.android.contacts': 'Contacts',
-      'com.android.dialer': 'Phone',
-      'com.android.calculator2': 'Calculator',
-      'com.android.clock': 'Clock',
-      'com.android.calendar': 'Calendar',
-      'com.android.fileexplorer': 'File Manager',
-      'com.android.vending': 'Google Play Store',
-    };
-    return packageToNameMap[packageName] ?? packageName;
   }
 
   String _formatSyncTime(String? isoString) {

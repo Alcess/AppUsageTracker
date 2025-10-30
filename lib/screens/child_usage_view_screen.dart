@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/family_link_service.dart';
 import '../services/role_service.dart';
+import '../utils/app_name_mapper.dart';
 
 class ChildUsageViewScreen extends StatefulWidget {
   const ChildUsageViewScreen({super.key});
@@ -171,7 +172,10 @@ class _ChildUsageViewScreenState extends State<ChildUsageViewScreen> {
 
   Widget _buildEventTile(dynamic event) {
     final packageName = event['packageName'] as String? ?? '';
-    final appName = event['appName'] as String? ?? packageName;
+    final rawAppName = event['appName'] as String? ?? packageName;
+    final appName = rawAppName != packageName
+        ? rawAppName
+        : AppNameMapper.getAppNameSync(packageName);
     final eventType = event['eventType'] as int? ?? 0;
     final timestamp = event['timestamp'] as int? ?? 0;
 

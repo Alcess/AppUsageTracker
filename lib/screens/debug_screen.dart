@@ -102,64 +102,6 @@ class _DebugScreenState extends State<DebugScreen> {
 
             // Test Buttons
             ElevatedButton(
-              onPressed: () {
-                try {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Showing simple overlay (in-app)...'),
-                    ),
-                  );
-
-                  SimpleOverlayService.showSimpleOverlay(context, 'Test App');
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Simple overlay error: $e')),
-                  );
-                }
-              },
-              child: const Text('Test Simple Overlay (In-App)'),
-            ),
-
-            const SizedBox(height: 10),
-
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Testing system overlay (works over other apps)...',
-                      ),
-                    ),
-                  );
-
-                  final success = await SimpleOverlayService.showSystemOverlay(
-                    'TikTok',
-                  );
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        success
-                            ? 'System overlay shown! Switch to another app to test.'
-                            : 'System overlay failed - check overlay permission',
-                      ),
-                      backgroundColor: success ? Colors.green : Colors.orange,
-                      duration: const Duration(seconds: 4),
-                    ),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('System overlay error: $e')),
-                  );
-                }
-              },
-              child: const Text('Test System Overlay (Over Other Apps)'),
-            ),
-
-            const SizedBox(height: 10),
-
-            ElevatedButton(
               onPressed: () async {
                 try {
                   ScaffoldMessenger.of(context).showSnackBar(

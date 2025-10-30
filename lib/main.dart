@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 import 'screens/stats_screen.dart';
 import 'screens/command_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/notification_screen.dart';
 import 'screens/parent_dashboard_screen.dart';
 import 'screens/child_usage_view_screen.dart';
 import 'services/fcm_service.dart';
@@ -116,7 +117,7 @@ class MyApp extends StatelessWidget {
                 children: [
                   StatsScreen(),
                   HomeScreen(),
-                  Icon(Icons.notifications),
+                  NotificationScreen(),
                   CommandScreen(),
                   SettingsScreen(),
                 ],

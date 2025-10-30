@@ -2,6 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import '../utils/app_name_mapper.dart';
 import 'overlay_service.dart';
 import 'simple_screen_lock_service.dart';
 import 'simple_overlay_service.dart';
@@ -117,7 +118,7 @@ class FCMService {
       case 'lock':
         if (appPackage != null) {
           // Legacy app-specific lock (deprecated)
-          final appName = _getAppNameFromPackage(appPackage);
+          final appName = AppNameMapper.getAppNameSync(appPackage);
           await showLockOverlay(appPackage, appName);
         }
         break;
@@ -170,24 +171,5 @@ class FCMService {
     }
 
     debugPrint('Lock command executed for $appName - System overlay: $success');
-  }
-
-  /// Get user-friendly app name from package name
-  static String _getAppNameFromPackage(String packageName) {
-    // Map common package names to user-friendly names
-    const packageToNameMap = {
-      'com.tiktok.android': 'TikTok',
-      'com.instagram.android': 'Instagram',
-      'com.google.android.youtube': 'YouTube',
-      'com.snapchat.android': 'Snapchat',
-      'com.whatsapp': 'WhatsApp',
-      'com.facebook.katana': 'Facebook',
-      'com.twitter.android': 'Twitter',
-      'com.spotify.music': 'Spotify',
-      'com.netflix.mediaclient': 'Netflix',
-      'com.roblox.client': 'Roblox',
-    };
-
-    return packageToNameMap[packageName] ?? packageName;
   }
 }
