@@ -1,5 +1,6 @@
 import 'family_link_service.dart';
 import 'fcm_service.dart';
+import 'package:flutter/foundation.dart';
 
 class CommandService {
   /// Send a device lock command to child device
@@ -96,6 +97,19 @@ class CommandService {
   static Future<bool> canSendCommands() async {
     final isLinked = await FamilyLinkService.isLinked();
     final childToken = await FamilyLinkService.getChildFCMToken();
-    return isLinked && childToken != null;
+    final hasAlternativeConnection =
+        await FamilyLinkService.hasAlternativeConnection();
+
+    debugPrint('Command capability check:');
+    debugPrint('- Linked: $isLinked');
+    debugPrint(
+      '- Child FCM Token: ${childToken != null ? "${childToken.substring(0, 20)}..." : "null"}',
+    );
+    debugPrint('- Alternative Connection: $hasAlternativeConnection');
+
+    // Can send commands if:
+    // 1. Normal: linked AND has child FCM token
+    // 2. Alternative: linked AND has alternative connection
+    return isLinked && (childToken != null || hasAlternativeConnection);
   }
 }

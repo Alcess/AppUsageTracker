@@ -245,7 +245,7 @@ class _ViewLimitsScreenState extends State<ViewLimitsScreen> {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: statusColor.withOpacity(0.2),
+                  backgroundColor: statusColor.withValues(alpha: 0.2),
                   radius: 20,
                   child: Icon(statusIcon, color: statusColor, size: 20),
                 ),
@@ -328,7 +328,7 @@ class _ViewLimitsScreenState extends State<ViewLimitsScreen> {
             // Progress bar
             LinearProgressIndicator(
               value: status.usagePercentage.clamp(0.0, 1.0),
-              backgroundColor: Colors.grey.withOpacity(0.3),
+              backgroundColor: Colors.grey.withValues(alpha: 0.3),
               valueColor: AlwaysStoppedAnimation<Color>(statusColor),
             ),
 

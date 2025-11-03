@@ -145,7 +145,7 @@ class _LockOverlayWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.3),
+                color: Colors.blue.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.blue, width: 2),
               ),
@@ -172,7 +172,7 @@ class _LockOverlayWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: onDismiss,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.withOpacity(0.7),
+                backgroundColor: Colors.red.withValues(alpha: 0.7),
                 foregroundColor: Colors.white,
               ),
               child: const Text('Dismiss (Test Only)'),

@@ -226,6 +226,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -247,47 +249,105 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
-                SwitchListTile(
-                  title: const Text('Dark mode'),
-                  subtitle: const Text('Use dark theme (changes immediately)'),
-                  value: _darkMode,
-                  onChanged: (v) async {
+                ListTile(
+                  title: Text(
+                    'Dark mode',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  subtitle: Text(
+                    'Use dark theme (changes immediately)',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  trailing: Switch.adaptive(
+                    value: _darkMode,
+                    onChanged: (v) async {
+                      setState(() => _darkMode = v);
+                      await ThemeService().setDarkMode(v);
+                    },
+                    activeThumbColor: colorScheme.primary,
+                    activeTrackColor: colorScheme.primary.withValues(
+                      alpha: 0.5,
+                    ),
+                    inactiveThumbColor: colorScheme.onSurface.withValues(
+                      alpha: 0.6,
+                    ),
+                    inactiveTrackColor: colorScheme.onSurface.withValues(
+                      alpha: 0.2,
+                    ),
+                  ),
+                  onTap: () async {
+                    // toggle when tapping the row
+                    final v = !_darkMode;
                     setState(() => _darkMode = v);
                     await ThemeService().setDarkMode(v);
                   },
                 ),
-                SwitchListTile(
-                  title: const Text('Child Mode'),
-                  value: _isChildMode,
-                  onChanged: (value) async {
-                    if (value) {
-                      // Show permission setup screen when enabling child mode
+                ListTile(
+                  title: Text(
+                    'Child Mode',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  trailing: Switch.adaptive(
+                    value: _isChildMode,
+                    onChanged: (value) async {
+                      if (value) {
+                        // Show permission setup screen when enabling child mode
+                        final permissionGranted = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PermissionSetupScreen(),
+                          ),
+                        );
+
+                        if (permissionGranted != true) {
+                          // User didn't complete permission setup, don't enable child mode
+                          return;
+                        }
+                      }
+
+                      setState(() => _isChildMode = value);
+                      await RoleService.setRole(
+                        value ? AppRole.child : AppRole.parent,
+                      );
+
+                      // Start/stop FCM command listening and usage tracking based on role
+                      if (value) {
+                        await FCMService.startListeningForCommands();
+                        await ChildUsageTrackingService.startChildModeTracking();
+                      } else {
+                        FCMService.stopListeningForCommands();
+                        ChildUsageTrackingService.stopChildModeTracking();
+                      }
+                    },
+                    activeThumbColor: colorScheme.primary,
+                    activeTrackColor: colorScheme.primary.withValues(
+                      alpha: 0.5,
+                    ),
+                    inactiveThumbColor: colorScheme.onSurface.withValues(
+                      alpha: 0.6,
+                    ),
+                    inactiveTrackColor: colorScheme.onSurface.withValues(
+                      alpha: 0.2,
+                    ),
+                  ),
+                  onTap: () async {
+                    // toggle via tap
+                    final newVal = !_isChildMode;
+                    if (newVal) {
                       final permissionGranted = await Navigator.push<bool>(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const PermissionSetupScreen(),
                         ),
                       );
-
-                      if (permissionGranted != true) {
-                        // User didn't complete permission setup, don't enable child mode
-                        return;
-                      }
+                      if (permissionGranted != true) return;
                     }
-
-                    setState(() => _isChildMode = value);
+                    setState(() => _isChildMode = newVal);
                     await RoleService.setRole(
-                      value ? AppRole.child : AppRole.parent,
+                      newVal ? AppRole.child : AppRole.parent,
                     );
-
-                    // Start/stop FCM command listening and usage tracking based on role
-                    if (value) {
-                      await FCMService.startListeningForCommands();
-                      await ChildUsageTrackingService.startChildModeTracking();
-                    } else {
-                      FCMService.stopListeningForCommands();
-                      ChildUsageTrackingService.stopChildModeTracking();
-                    }
                   },
                 ),
                 const Divider(height: 1),
@@ -350,40 +410,109 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                 ],
                 ListTile(
-                  title: const Text('Default time range'),
-                  subtitle: const Text('Used when opening the app'),
+                  title: Text(
+                    'Default time range',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  subtitle: Text(
+                    'Used when opening the app',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
                   trailing: DropdownButton<TimeRange>(
+                    dropdownColor: colorScheme.surface,
                     value: _defaultRange,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
                     onChanged: (v) =>
                         setState(() => _defaultRange = v ?? TimeRange.today),
-                    items: const [
+                    items: [
                       DropdownMenuItem(
                         value: TimeRange.today,
-                        child: Text('Today'),
+                        child: Text(
+                          'Today',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: colorScheme.onSurface),
+                        ),
                       ),
                       DropdownMenuItem(
                         value: TimeRange.week,
-                        child: Text('Week'),
+                        child: Text(
+                          'Week',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: colorScheme.onSurface),
+                        ),
                       ),
                       DropdownMenuItem(
                         value: TimeRange.month,
-                        child: Text('Month'),
+                        child: Text(
+                          'Month',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: colorScheme.onSurface),
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const Divider(height: 1),
-                SwitchListTile(
-                  title: const Text('Include system apps'),
-                  subtitle: const Text('Show system packages in usage list'),
-                  value: _includeSystemApps,
-                  onChanged: (v) => setState(() => _includeSystemApps = v),
+                ListTile(
+                  title: Text(
+                    'Include system apps',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  subtitle: Text(
+                    'Show system packages in usage list',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  trailing: Switch.adaptive(
+                    value: _includeSystemApps,
+                    onChanged: (v) => setState(() => _includeSystemApps = v),
+                    activeThumbColor: colorScheme.primary,
+                    activeTrackColor: colorScheme.primary.withValues(
+                      alpha: 0.5,
+                    ),
+                    inactiveThumbColor: colorScheme.onSurface.withValues(
+                      alpha: 0.6,
+                    ),
+                    inactiveTrackColor: colorScheme.onSurface.withValues(
+                      alpha: 0.2,
+                    ),
+                  ),
+                  onTap: () =>
+                      setState(() => _includeSystemApps = !_includeSystemApps),
                 ),
-                SwitchListTile(
-                  title: const Text('Enable notifications'),
-                  subtitle: const Text('Daily summary at the end of day'),
-                  value: _enableNotifications,
-                  onChanged: (v) => setState(() => _enableNotifications = v),
+                ListTile(
+                  title: Text(
+                    'Enable notifications',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  subtitle: Text(
+                    'Daily summary at the end of day',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  trailing: Switch.adaptive(
+                    value: _enableNotifications,
+                    onChanged: (v) => setState(() => _enableNotifications = v),
+                    activeThumbColor: colorScheme.primary,
+                    activeTrackColor: colorScheme.primary.withValues(
+                      alpha: 0.5,
+                    ),
+                    inactiveThumbColor: colorScheme.onSurface.withValues(
+                      alpha: 0.6,
+                    ),
+                    inactiveTrackColor: colorScheme.onSurface.withValues(
+                      alpha: 0.2,
+                    ),
+                  ),
+                  onTap: () => setState(
+                    () => _enableNotifications = !_enableNotifications,
+                  ),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -405,13 +534,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Required for app locking functionality',
                     ),
                     onTap: () async {
+                      final messenger = ScaffoldMessenger.of(context);
                       final hasPermission =
                           await OverlayService.hasOverlayPermission();
                       if (!hasPermission) {
                         await OverlayService.requestOverlayPermission();
                       } else {
                         if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           const SnackBar(
                             content: Text('Overlay permission already granted'),
                           ),

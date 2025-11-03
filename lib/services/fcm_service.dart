@@ -1,8 +1,9 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../utils/app_name_mapper.dart';
+import '../utils/shared_prefs_helper.dart';
+import '../utils/app_logger.dart';
 import 'overlay_service.dart';
 import 'simple_screen_lock_service.dart';
 import 'simple_overlay_service.dart';
@@ -18,7 +19,7 @@ class FCMService {
     try {
       // Skip FCM initialization on web
       if (kIsWeb) {
-        debugPrint('FCM not supported on web platform');
+        AppLogger.fcm('FCM not supported on web platform');
         return null;
       }
 
@@ -30,29 +31,115 @@ class FCMService {
       );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        // Get FCM token
-        String? fcmToken = await _messaging.getToken();
+        // Get FCM token with retry mechanism
+        String? fcmToken = await _getFCMTokenWithRetry();
 
-        // Store token locally
+        // Store token locally if obtained
         if (fcmToken != null) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('fcmToken', fcmToken);
+          await SharedPrefsHelper.setString('fcmToken', fcmToken);
+          AppLogger.fcm('Token obtained and stored successfully');
+        } else {
+          AppLogger.error('Failed to obtain FCM token after retries', 'FCM');
         }
 
         return fcmToken;
+      } else {
+        AppLogger.warning('FCM notification permission denied', 'FCM');
       }
 
       return null;
     } catch (e) {
-      debugPrint('FCM initialization error: $e');
+      AppLogger.error('FCM initialization error', 'FCM', e);
+      // Continue without FCM if Google Play Services has issues
       return null;
     }
   }
 
+  /// Get FCM token with retry mechanism to handle Google Play Services issues
+  static Future<String?> _getFCMTokenWithRetry() async {
+    for (int attempt = 1; attempt <= 3; attempt++) {
+      try {
+        AppLogger.debug(
+          'Attempting to get FCM token (attempt $attempt/3)',
+          'FCM',
+        );
+        final token = await _messaging.getToken();
+        if (token != null) {
+          AppLogger.fcm('Token obtained successfully on attempt $attempt');
+          return token;
+        }
+      } catch (e) {
+        AppLogger.warning('FCM token attempt $attempt failed: $e', 'FCM');
+        if (attempt < 3) {
+          // Wait before retrying
+          await Future.delayed(Duration(seconds: attempt));
+        }
+      }
+    }
+
+    AppLogger.warning(
+      'All FCM token attempts failed - continuing without FCM',
+      'FCM',
+    );
+    return null;
+  }
+
   /// Get stored FCM token
   static Future<String?> getFCMToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('fcmToken');
+    try {
+      if (kIsWeb) {
+        AppLogger.fcm('FCM not supported on web platform');
+        return null;
+      }
+
+      String? storedToken = await SharedPrefsHelper.getString('fcmToken');
+
+      // If no stored token, try to get a fresh one
+      if (storedToken == null) {
+        AppLogger.debug(
+          'No stored FCM token found, requesting new one...',
+          'FCM',
+        );
+        storedToken = await _messaging.getToken();
+
+        if (storedToken != null) {
+          await SharedPrefsHelper.setString('fcmToken', storedToken);
+          AppLogger.fcm('New FCM token obtained and stored');
+        } else {
+          AppLogger.error('Failed to obtain FCM token', 'FCM');
+        }
+      }
+
+      return storedToken;
+    } catch (e) {
+      AppLogger.error('Error getting FCM token', 'FCM', e);
+      return null;
+    }
+  }
+
+  /// Force refresh FCM token
+  static Future<String?> refreshFCMToken() async {
+    try {
+      if (kIsWeb) {
+        AppLogger.fcm('FCM not supported on web platform');
+        return null;
+      }
+
+      AppLogger.debug('Refreshing FCM token...', 'FCM');
+      final newToken = await _messaging.getToken();
+
+      if (newToken != null) {
+        await SharedPrefsHelper.setString('fcmToken', newToken);
+        AppLogger.fcm('Token refreshed successfully');
+      } else {
+        AppLogger.error('Failed to refresh FCM token', 'FCM');
+      }
+
+      return newToken;
+    } catch (e) {
+      AppLogger.error('Error refreshing FCM token', 'FCM', e);
+      return null;
+    }
   }
 
   /// Start listening for commands (Child device)
@@ -94,7 +181,7 @@ class FCMService {
       });
       return true;
     } catch (e) {
-      debugPrint('Error sending command: $e');
+      AppLogger.error('Error sending command', 'FCM', e);
       return false;
     }
   }
@@ -113,7 +200,10 @@ class FCMService {
         // Unlock the device - hide all overlays
         await SimpleOverlayService.hideSystemOverlay();
         OverlayService.hideOverlay();
-        debugPrint('Device unlock command executed - all overlays hidden');
+        AppLogger.service(
+          'Device unlock command executed - all overlays hidden',
+          'FCM',
+        );
         break;
       case 'lock':
         if (appPackage != null) {
@@ -126,22 +216,26 @@ class FCMService {
         // Legacy unlock command (deprecated)
         await SimpleOverlayService.hideSystemOverlay();
         OverlayService.hideOverlay();
-        debugPrint('Unlock command executed - all overlays hidden');
+        AppLogger.service(
+          'Unlock command executed - all overlays hidden',
+          'FCM',
+        );
         break;
       case 'emergency_unlock':
       case 'unlock_all':
         // Handle emergency unlock or unlock all command - force hide all overlays
         await SimpleOverlayService.hideSystemOverlay();
         OverlayService.hideOverlay();
-        debugPrint(
+        AppLogger.service(
           'Emergency/unlock all command executed - all overlays force hidden',
+          'FCM',
         );
         break;
       case 'time_limit':
         // Handle time limit command
         break;
       default:
-        debugPrint('Unknown command: $action');
+        AppLogger.warning('Unknown command: $action', 'FCM');
     }
   }
 
@@ -157,7 +251,10 @@ class FCMService {
       await SimpleScreenLockService.showBlockingNotification('Device Locked');
     }
 
-    debugPrint('Device lock command executed - System overlay: $success');
+    AppLogger.service(
+      'Device lock command executed - System overlay: $success',
+      'FCM',
+    );
   }
 
   /// Show lock overlay for specific app
@@ -170,6 +267,9 @@ class FCMService {
       await SimpleScreenLockService.showBlockingNotification(appName);
     }
 
-    debugPrint('Lock command executed for $appName - System overlay: $success');
+    AppLogger.service(
+      'Lock command executed for $appName - System overlay: $success',
+      'FCM',
+    );
   }
 }

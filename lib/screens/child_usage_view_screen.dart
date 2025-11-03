@@ -159,7 +159,7 @@ class _ChildUsageViewScreenState extends State<ChildUsageViewScreen> {
                         child: Text('No app events in this session'),
                       )
                     else
-                      ...events.map((event) => _buildEventTile(event)).toList(),
+                      ...events.map((event) => _buildEventTile(event)),
                   ],
                 ),
               );
@@ -214,7 +214,7 @@ class _ChildUsageViewScreenState extends State<ChildUsageViewScreen> {
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: eventColor.withOpacity(0.1),
+          color: eventColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(

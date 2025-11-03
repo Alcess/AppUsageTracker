@@ -170,7 +170,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             const SizedBox(height: 16),
 
             // Device lock/unlock button
-            Container(
+            SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _toggleDeviceLock,
@@ -335,9 +335,9 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: eventColor.withOpacity(0.1),
+        color: eventColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: eventColor.withOpacity(0.3)),
+        border: Border.all(color: eventColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

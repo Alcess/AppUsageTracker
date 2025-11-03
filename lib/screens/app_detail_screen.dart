@@ -5,7 +5,12 @@ import '../models/app_usage.dart';
 import '../services/app_usage_service.dart';
 
 class AppDetailScreen extends StatefulWidget {
-  const AppDetailScreen({super.key, required this.packageName, required this.appName, required this.initialRange});
+  const AppDetailScreen({
+    super.key,
+    required this.packageName,
+    required this.appName,
+    required this.initialRange,
+  });
 
   final String packageName;
   final String appName;
@@ -28,10 +33,10 @@ class _AppDetailScreenState extends State<AppDetailScreen> {
   }
 
   Future<AppUsageDetail> _load() => _service.fetchUsageDetail(
-        packageName: widget.packageName,
-        appName: widget.appName,
-        range: _range,
-      );
+    packageName: widget.packageName,
+    appName: widget.appName,
+    range: _range,
+  );
 
   void _changeRange(TimeRange r) {
     setState(() {
@@ -43,9 +48,7 @@ class _AppDetailScreenState extends State<AppDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.appName),
-      ),
+      appBar: AppBar(title: Text(widget.appName)),
       body: Column(
         children: [
           Padding(
@@ -100,16 +103,35 @@ class _Summary extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(children: [
-              const Icon(Icons.timer),
-              const SizedBox(width: 8),
-              Text(formatTime(data.totalMinutes), style: Theme.of(context).textTheme.titleMedium),
-            ]),
-            Row(children: [
-              const Icon(Icons.play_arrow),
-              const SizedBox(width: 8),
-              Text('${data.totalLaunches} launches', style: Theme.of(context).textTheme.titleMedium),
-            ]),
+            Row(
+              children: [
+                Icon(Icons.timer, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  formatTime(data.totalMinutes),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Icon(
+                  Icons.play_arrow,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${data.totalLaunches} launches',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -123,7 +145,9 @@ class _DailyChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxMinutes = data.daily.map((d) => d.minutesUsed).fold<int>(0, (a, b) => a > b ? a : b);
+    final maxMinutes = data.daily
+        .map((d) => d.minutesUsed)
+        .fold<int>(0, (a, b) => a > b ? a : b);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -132,9 +156,15 @@ class _DailyChart extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Daily usage', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Daily usage',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
-                        ...data.daily.map((d) {
+            ...data.daily.map((d) {
               final pct = maxMinutes == 0 ? 0.0 : d.minutesUsed / maxMinutes;
               final barColor = Theme.of(context).colorScheme.primary;
               return Padding(
@@ -143,7 +173,12 @@ class _DailyChart extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 80,
-                      child: Text(_label(d.day), style: Theme.of(context).textTheme.bodySmall),
+                      child: Text(
+                        _label(d.day),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
                     ),
                     Expanded(
                       child: Stack(
@@ -151,7 +186,9 @@ class _DailyChart extends StatelessWidget {
                           Container(
                             height: 10,
                             decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(6),
                             ),
                           ),
@@ -169,11 +206,21 @@ class _DailyChart extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    SizedBox(width: 40, child: Text(formatTime(d.minutesUsed), textAlign: TextAlign.end)),
+                    SizedBox(
+                      width: 40,
+                      child: Text(
+                        formatTime(d.minutesUsed),
+                        textAlign: TextAlign.end,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -188,7 +235,7 @@ class _DailyChart extends StatelessWidget {
     if (diff == 0) return 'Today';
     if (diff == 1) return 'Yesterday';
     // Short weekday
-    const names = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return names[day.weekday - 1];
   }
 }

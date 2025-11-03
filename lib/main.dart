@@ -15,6 +15,8 @@ import 'services/role_service.dart';
 import 'services/child_usage_tracking_service.dart';
 import 'services/theme_service.dart';
 import 'services/app_limit_service.dart';
+import 'services/family_link_service.dart';
+import 'utils/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,12 +34,17 @@ void main() async {
   // Initialize Firebase only on mobile platforms (requires config files)
   if (!kIsWeb) {
     try {
+      // Always try to initialize Firebase, handle duplicate app gracefully
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      debugPrint('Firebase initialized successfully');
 
       // Initialize FCM after Firebase
       await FCMService.initialize();
+
+      // Update FCM tokens in linking database
+      await _updateFCMTokens();
 
       // Start listening for commands if in child mode
       final role = await RoleService.getRole();
@@ -47,8 +54,14 @@ void main() async {
         await ChildUsageTrackingService.startChildModeTracking();
       }
     } catch (e) {
-      // Handle Firebase/FCM initialization errors gracefully
-      debugPrint('Firebase/FCM initialization failed: $e');
+      // If Firebase is already initialized, that's fine
+      if (e.toString().contains('duplicate-app')) {
+        debugPrint('Firebase already initialized, continuing...');
+      } else {
+        debugPrint('Firebase/FCM initialization failed: $e');
+        debugPrint('App will continue with limited functionality');
+        // Continue app initialization even if FCM fails
+      }
     }
   } else {
     debugPrint('Running in web mode - Firebase features disabled');
@@ -65,6 +78,20 @@ void main() async {
   runApp(const MyApp());
 }
 
+/// Update FCM tokens for existing links
+Future<void> _updateFCMTokens() async {
+  try {
+    final role = await RoleService.getRole();
+    if (role == AppRole.child) {
+      await FamilyLinkService.updateChildFCMToken();
+    } else if (role == AppRole.parent) {
+      await FamilyLinkService.updateParentFCMToken();
+    }
+  } catch (e) {
+    debugPrint('Error updating FCM tokens: $e');
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -76,8 +103,8 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'App Usage Tracker',
-          theme: ThemeService().lightTheme,
-          darkTheme: ThemeService().darkTheme,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
           themeMode: ThemeService().isDarkMode
               ? ThemeMode.dark
               : ThemeMode.light,

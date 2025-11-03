@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/command_service.dart';
 import '../services/role_service.dart';
+import '../services/family_link_service.dart';
 
 class CommandScreen extends StatefulWidget {
   const CommandScreen({super.key});
@@ -22,12 +23,59 @@ class _CommandScreenState extends State<CommandScreen> {
 
   Future<void> _checkCommandCapability() async {
     final role = await RoleService.getRole();
-    final canSend = await CommandService.canSendCommands();
+    final isLinked = await FamilyLinkService.isLinked();
+    final childToken = await FamilyLinkService.getChildFCMToken();
+
+    // Debug info
+    debugPrint('Role: $role');
+    debugPrint('Is linked: $isLinked');
+    debugPrint('Child FCM token available: ${childToken != null}');
+    if (childToken != null) {
+      debugPrint('Child FCM token: ${childToken.substring(0, 20)}...');
+    }
 
     setState(() {
-      _canSendCommands = role == AppRole.parent && canSend;
+      _canSendCommands =
+          role == AppRole.parent && isLinked && childToken != null;
       _loading = false;
     });
+  }
+
+  Future<String> _getDiagnosticMessage() async {
+    final role = await RoleService.getRole();
+    final isLinked = await FamilyLinkService.isLinked();
+    final childToken = await FamilyLinkService.getChildFCMToken();
+    final linkCode = await FamilyLinkService.getLinkCode();
+
+    if (role != AppRole.parent) {
+      return 'Switch to Parent mode in Settings to control child devices.';
+    }
+
+    if (linkCode == null) {
+      return 'No link code found. Link to a child device in Settings first.';
+    }
+
+    if (!isLinked) {
+      return 'Link code exists but not connected. Make sure the child device completed the linking process.';
+    }
+
+    if (childToken == null) {
+      return 'Connected to child device but FCM token is missing. Child device may need to restart the app or refresh its connection.\n\n🔧 Go to Settings → Repair Connection to fix connection issues automatically.';
+    }
+
+    return 'Unknown connection issue. Try relinking in Settings.';
+  }
+
+  Future<void> _refreshConnection() async {
+    setState(() {
+      _loading = true;
+    });
+
+    // Try to update FCM tokens
+    await FamilyLinkService.updateParentFCMToken();
+
+    // Recheck capabilities
+    await _checkCommandCapability();
   }
 
   @override
@@ -39,24 +87,49 @@ class _CommandScreenState extends State<CommandScreen> {
     if (!_canSendCommands) {
       return Scaffold(
         appBar: AppBar(title: const Text('Device Control')),
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.link_off, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                'Not connected to child device',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        body: FutureBuilder<String>(
+          future: _getDiagnosticMessage(),
+          builder: (context, snapshot) {
+            final message = snapshot.data ?? 'Checking connection...';
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.link_off, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'Not connected to child device',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed('/settings'),
+                        child: Text('Go to Settings'),
+                      ),
+                      SizedBox(width: 16),
+                      OutlinedButton(
+                        onPressed: _refreshConnection,
+                        child: Text('Refresh'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              SizedBox(height: 8),
-              Text(
-                'Link to a child device in Settings to send commands',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       );
     }
@@ -101,7 +174,7 @@ class _CommandScreenState extends State<CommandScreen> {
                     const SizedBox(height: 16),
 
                     // Device lock/unlock button
-                    Container(
+                    SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: _toggleDeviceLock,

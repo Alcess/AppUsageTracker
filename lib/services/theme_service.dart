@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/shared_prefs_helper.dart';
 
 class ThemeService extends ChangeNotifier {
   static final ThemeService _instance = ThemeService._internal();
@@ -11,24 +11,21 @@ class ThemeService extends ChangeNotifier {
 
   /// Initialize theme from saved preferences
   Future<void> initializeTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    _isDarkMode = prefs.getBool('darkMode') ?? false;
+    _isDarkMode = await SharedPrefsHelper.getBool('darkMode');
     notifyListeners();
   }
 
   /// Toggle dark mode and save preference
   Future<void> toggleDarkMode() async {
     _isDarkMode = !_isDarkMode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('darkMode', _isDarkMode);
+    await SharedPrefsHelper.setBool('darkMode', _isDarkMode);
     notifyListeners();
   }
 
   /// Set dark mode state and save preference
   Future<void> setDarkMode(bool isDark) async {
     _isDarkMode = isDark;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('darkMode', _isDarkMode);
+    await SharedPrefsHelper.setBool('darkMode', _isDarkMode);
     notifyListeners();
   }
 

@@ -78,8 +78,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
             message: 'Check Limits Now',
             child: IconButton(
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 await _limitService.triggerNotificationCheck();
-                ScaffoldMessenger.of(context).showSnackBar(
+                if (!mounted) return;
+                scaffoldMessenger.showSnackBar(
                   const SnackBar(content: Text('Checked for limit violations')),
                 );
               },
@@ -222,15 +224,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -253,7 +256,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.2),
+          backgroundColor: color.withValues(alpha: 0.2),
           child: Icon(
             isExceeded ? Icons.warning : Icons.timer,
             color: color,
@@ -279,7 +282,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               width: 60,
               child: LinearProgressIndicator(
                 value: status.usagePercentage,
-                backgroundColor: Colors.grey.withOpacity(0.3),
+                backgroundColor: Colors.grey.withValues(alpha: 0.3),
                 valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
             ),
@@ -328,25 +331,26 @@ class _NotificationScreenState extends State<NotificationScreen> {
           children: [
             Text(
               'Summary',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [Text('Total Limits:'), Text(totalLimits.toString())],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Exceeded:'),
                 Text(
-                  exceededCount.toString(),
-                  style: TextStyle(
-                    color: exceededCount > 0 ? Colors.red : null,
-                    fontWeight: exceededCount > 0 ? FontWeight.bold : null,
+                  'Total Limits:',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  totalLimits.toString(),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -355,13 +359,42 @@ class _NotificationScreenState extends State<NotificationScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Within Limits:'),
+                Text(
+                  'Exceeded:',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  exceededCount.toString(),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: exceededCount > 0
+                        ? Colors.red
+                        : Theme.of(context).colorScheme.onSurface,
+                    fontWeight: exceededCount > 0
+                        ? FontWeight.bold
+                        : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Within Limits:',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 Text(
                   (totalLimits - exceededCount).toString(),
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: (totalLimits - exceededCount) > 0
                         ? Colors.green
-                        : null,
+                        : Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],

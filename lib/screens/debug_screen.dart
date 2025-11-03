@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../services/overlay_service.dart';
 import '../services/fcm_service.dart';
 import '../services/family_link_service.dart';
@@ -67,6 +66,7 @@ class _DebugScreenState extends State<DebugScreen> {
                     : ElevatedButton(
                         onPressed: () async {
                           await OverlayService.requestOverlayPermission();
+                          if (!mounted) return;
                           _checkStatus();
                         },
                         child: const Text('Grant'),
@@ -103,8 +103,9 @@ class _DebugScreenState extends State<DebugScreen> {
             // Test Buttons
             ElevatedButton(
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 try {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('Testing simple screen lock...'),
                     ),
@@ -112,7 +113,8 @@ class _DebugScreenState extends State<DebugScreen> {
 
                   final success = await SimpleScreenLockService.lockScreen();
 
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  if (!mounted) return;
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text(
                         success
@@ -123,7 +125,8 @@ class _DebugScreenState extends State<DebugScreen> {
                     ),
                   );
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  if (!mounted) return;
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(content: Text('Screen lock error: $e')),
                   );
                 }
@@ -135,8 +138,9 @@ class _DebugScreenState extends State<DebugScreen> {
 
             ElevatedButton(
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 try {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('Testing blocking notification...'),
                     ),
@@ -146,14 +150,16 @@ class _DebugScreenState extends State<DebugScreen> {
                     'Test App',
                   );
 
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  if (!mounted) return;
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('Blocking notification sent!'),
                       backgroundColor: Colors.green,
                     ),
                   );
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  if (!mounted) return;
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(content: Text('Notification error: $e')),
                   );
                 }
@@ -165,13 +171,16 @@ class _DebugScreenState extends State<DebugScreen> {
 
             ElevatedButton(
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 try {
                   await SimpleScreenLockService.requestDeviceAdmin();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  if (!mounted) return;
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(content: Text('Device admin request sent')),
                   );
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  if (!mounted) return;
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(content: Text('Device admin error: $e')),
                   );
                 }
@@ -183,15 +192,18 @@ class _DebugScreenState extends State<DebugScreen> {
 
             ElevatedButton(
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 if (SimpleOverlayService.isShowing) {
                   SimpleOverlayService.hideOverlay();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  if (!mounted) return;
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(content: Text('In-app overlay hidden')),
                   );
                 } else {
                   await SimpleOverlayService.hideSystemOverlay();
                   OverlayService.hideOverlay();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  if (!mounted) return;
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(content: Text('All overlays hidden')),
                   );
                 }
